@@ -304,6 +304,7 @@ mark{
 .modal h2{ margin:0 0 12px; font-size:18px; }
 .modal pre{ white-space:pre-wrap; word-break:break-word; font:inherit; font-size:14px; line-height:1.75; margin:0; }
 .modal-close{ float:right; border:none; background:var(--surface-2); color:var(--ink); border-radius:8px; padding:6px 10px; cursor:pointer; font:inherit; }
+.hit-divider{ margin:18px 4px 6px; font-size:13px; color:var(--ink-faint); border-top:1px dashed var(--surface-2); padding-top:12px; }
 </style>
 
 <div class="wrap">
@@ -344,13 +345,23 @@ const CATS = ["技术开发", "技术支持", "产品与策划", "设计与美�
 const catCounts = {};
 JOBS.forEach(j => { catCounts[j.cat] = (catCounts[j.cat]||0) + 1; });
 
-let activeCat = null;
-try { activeCat = localStorage.getItem('db_jobs_cat') || null; } catch(e) {}
+let activeCat = null;  // 每次打开都从「全部」开始,不记住上次的分类
+
+const T2S = {"測": "测", "試": "试", "師": "师", "後": "后", "資": "资", "設": "设", "計": "计", "開": "开", "發": "发", "數": "数", "據": "据", "營": "营", "運": "运", "產": "产", "經": "经", "專": "专", "員": "员", "網": "网", "絡": "络", "務": "务", "職": "职", "責": "责", "銷": "销", "廣": "广", "業": "业", "線": "线", "體": "体", "驗": "验", "環": "环", "遠": "远", "處": "处", "戶": "户", "帳": "账", "號": "号", "碼": "码", "語": "语", "華": "华", "貿": "贸", "會": "会", "財": "财", "稅": "税", "證": "证", "簽": "签", "護": "护", "執": "执", "層": "层", "級": "级", "總": "总", "監": "监", "長": "长", "組": "组", "團": "团", "隊": "队", "領": "领", "導": "导", "協": "协", "調": "调", "溝": "沟", "優": "优", "勢": "势", "獎": "奖", "勵": "励", "績": "绩", "準": "准", "備": "备", "讀": "读", "寫": "写", "說": "说", "聽": "听", "譯": "译", "書": "书", "學": "学", "歷": "历", "項": "项", "創": "创", "製": "制", "視": "视", "頻": "频", "劇": "剧", "畫": "画", "圖": "图", "檔": "档", "類": "类", "統": "统", "構": "构", "雲": "云", "庫": "库", "儲": "储", "緩": "缓", "機": "机", "習": "习", "規": "规", "劃": "划", "質": "质", "檢": "检", "異": "异", "風": "风", "險": "险", "審": "审", "賬": "账", "單": "单", "實": "实", "時": "时", "報": "报", "價": "价", "錢": "钱", "輔": "辅", "訓": "训", "練": "练", "錄": "录", "聯": "联", "繫": "系", "飛": "飞", "鏈": "链", "區": "区", "塊": "块", "遊": "游", "戲": "戏", "電": "电", "競": "竞", "東": "东", "亞": "亚", "灣": "湾", "臺": "台", "馬": "马", "來": "来", "種": "种", "選": "选", "擇": "择", "維": "维", "個": "个", "為": "为", "與": "与", "動": "动", "態": "态", "點": "点", "擊": "击", "轉": "转", "換": "换", "傳": "传", "輸": "输", "樣": "样", "標": "标", "題": "题", "際": "际", "國": "国", "內": "内", "雙": "双", "週": "周", "這": "这", "們": "们", "對": "对", "應": "应", "該": "该", "還": "还", "進": "进", "過": "过", "適": "适", "當": "当", "關": "关", "鍵": "键", "詞": "词", "顧": "顾", "問": "问", "須": "须", "樓": "楼", "場": "场", "賽": "赛", "盤": "盘", "擬": "拟", "狀": "状", "況": "况", "嚴": "严", "謹": "谨", "認": "认", "識": "识", "鬆": "松", "穩": "稳", "複": "复", "雜": "杂", "響": "响", "頁": "页", "嗎": "吗", "麼": "么", "於": "于", "從": "从", "並": "并", "將": "将", "結": "结", "閱": "阅", "夠": "够", "舉": "举", "辦": "办", "濟": "济", "圍": "围", "傷": "伤", "願": "愿", "給": "给", "紀": "纪", "約": "约", "縮": "缩", "細": "细", "範": "范", "織": "织", "揮": "挥", "頭": "头", "顯": "显", "屬": "属", "額": "额", "隨": "随", "變": "变", "讓": "让", "議": "议", "論": "论", "談": "谈", "請": "请", "誠": "诚", "謝": "谢", "豐": "丰", "負": "负", "費": "费", "貼": "贴", "賺": "赚", "購": "购", "貨": "货", "帶": "带", "幫": "帮", "廳": "厅", "歡": "欢", "獨": "独", "現": "现", "瓏": "珑", "闆": "板", "陸": "陆", "雖": "虽", "難": "难", "靜": "静", "順": "顺", "預": "预", "頓": "顿", "飯": "饭", "魚": "鱼", "鳥": "鸟", "黃": "黄"};
+function norm(s){ return (s||"").toLowerCase().replace(/[\u4e00-\u9fff]/g, ch => T2S[ch] || ch); }
+// 搜索不分繁简体:关键字和岗位内容都先转成简体再比对
+function currentQuery(){ return norm((document.getElementById('searchInput').value || '').trim()); }
+function matchesQuery(j, q){ return !q || norm(j.title).includes(q) || norm(j.jd).includes(q); }
 
 const chipRow = document.getElementById('chipRow');
 function renderChips(){
-  const chips = [{cat:null,label:'全部',n:JOBS.length}].concat(
-    CATS.filter(c => catCounts[c]).map(c => ({cat:c,label:c,n:catCounts[c]}))
+  // 有关键字时,分类后面的数字显示「这个分类里有几个符合的岗位」
+  const q = currentQuery();
+  const counts = {};
+  let total = 0;
+  JOBS.forEach(j => { if (matchesQuery(j, q)) { counts[j.cat] = (counts[j.cat]||0) + 1; total++; } });
+  const chips = [{cat:null,label:'全部',n:total}].concat(
+    CATS.filter(c => catCounts[c]).map(c => ({cat:c,label:c,n:counts[c]||0}))
   );
   chipRow.innerHTML = chips.map(c => `
     <div class="chip ${activeCat===c.cat ? 'active':''}" data-cat="${c.cat ?? ''}">
@@ -361,7 +372,6 @@ function renderChips(){
     el.addEventListener('click', () => {
       const v = el.getAttribute('data-cat');
       activeCat = v === '' ? null : v;
-      try { activeCat ? localStorage.setItem('db_jobs_cat', activeCat) : localStorage.removeItem('db_jobs_cat'); } catch(e) {}
       renderChips();
       render();
     });
@@ -374,10 +384,18 @@ function escapeHtml(s){
 function escapeRegex(s){
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-function highlight(escapedText, q){
-  if (!q) return escapedText;
-  const re = new RegExp('(' + escapeRegex(q) + ')', 'ig');
-  return escapedText.replace(re, '<mark>$1</mark>');
+function highlight(rawText, q){
+  // 在转成简体后的文字里找关键字位置,再把原文对应的字标亮(繁体原文也能标亮)
+  rawText = rawText || '';
+  if (!q) return escapeHtml(rawText);
+  const n = norm(rawText);
+  if (n.length !== rawText.length) return escapeHtml(rawText);
+  let out = '', i = 0, k;
+  while ((k = n.indexOf(q, i)) !== -1){
+    out += escapeHtml(rawText.slice(i, k)) + '<mark>' + escapeHtml(rawText.slice(k, k + q.length)) + '</mark>';
+    i = k + q.length;
+  }
+  return out + escapeHtml(rawText.slice(i));
 }
 
 const list = document.getElementById('list');
@@ -385,19 +403,18 @@ const empty = document.getElementById('empty');
 const statsEl = document.getElementById('stats');
 
 function render(){
-  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const q = currentQuery();
 
   let filtered = JOBS.filter(j => {
     if (activeCat && j.cat !== activeCat) return false;
-    if (!q) return true;
-    return j.title.toLowerCase().includes(q) || j.jd.toLowerCase().includes(q);
+    return matchesQuery(j, q);
   });
 
   // 有关键字时:标题命中的排在前面(最相关),仅描述里命中的排后面,
   // 且给后者打上"命中于描述"的提示,避免看起来像误匹配。
   if (q){
     filtered = filtered
-      .map((j, idx) => ({ j, idx, titleHit: j.title.toLowerCase().includes(q) }))
+      .map((j, idx) => ({ j, idx, titleHit: norm(j.title).includes(q) }))
       .sort((a, b) => {
         if (a.titleHit !== b.titleHit) return a.titleHit ? -1 : 1;
         return a.idx - b.idx; // 稳定排序,组内保持原顺序
@@ -414,12 +431,19 @@ function render(){
   }
   empty.hidden = true;
 
+  const anyTitleHit = q && filtered.some(j => norm(j.title).includes(q));
+  let dividerShown = false;
   list.innerHTML = filtered.map(j => {
-    const titleHit = q ? j.title.toLowerCase().includes(q) : false;
+    const titleHit = q ? norm(j.title).includes(q) : false;
     const jdOnlyHit = q && !titleHit;
-    const titleHtml = highlight(escapeHtml(j.title), q);
-    const jdHtml = highlight(escapeHtml(j.jd), q);
-    return `
+    let divider = '';
+    if (jdOnlyHit && !dividerShown){
+      dividerShown = true;
+      divider = `<div class="hit-divider">${anyTitleHit ? '以下是' : ''}岗位名称不含「${escapeHtml(q)}」、只在描述里提到的岗位</div>`;
+    }
+    const titleHtml = highlight(j.title, q);
+    const jdHtml = highlight(j.jd, q);
+    return divider + `
     <div class="card">
       <div class="card-top">
         <span class="card-tag">${escapeHtml(j.cat)}</span>
@@ -501,7 +525,12 @@ function fallbackCopy(text, onDone){
   document.body.removeChild(ta);
 }
 
-document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('searchInput').addEventListener('input', () => {
+  // 打关键字时自动回到「全部」,避免只在某个分类里找而漏掉
+  if (currentQuery() && activeCat) activeCat = null;
+  renderChips();
+  render();
+});
 
 const jpModal = document.getElementById('jpModal');
 function openNote(key){
